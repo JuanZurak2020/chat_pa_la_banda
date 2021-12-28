@@ -20,6 +20,7 @@
 <p>Authenticated!</p>
 <p>Socket ID: <span id="socketId"></span></p>
 <p>Username: <span id="username"></span></p>
+
 <form action="/logout" method="post">
   <div style="position:fixed; top:0; right: 0;">
     <input type="submit" value="Log out" />
@@ -52,6 +53,16 @@
   const messages = document.getElementById('messages');
   const form = document.getElementById('form');
   const input = document.getElementById('input');
+  const cargarSonido = function (fuente) {
+    const sonido = document.createElement("audio");
+    sonido.src = fuente;
+    sonido.setAttribute("preload", "auto");
+    sonido.setAttribute("controls", "none");
+    sonido.style.display = "none"; // <-- oculto
+    document.body.appendChild(sonido);
+    return sonido;
+  };
+
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -61,7 +72,13 @@
       minute:'2-digit'
     });
     if (input.value) {
-      socket.emit('chat message', time + ' | ' + input.value);
+      if (input.value.includes('emoji>')) {
+        socket.emit('emoji', input.value);
+      } else if (input.value.includes('rola>')) {
+        socket.emit('rola', input.value);
+      } else {
+        socket.emit('chat message', time + ' | ' + input.value);
+      }
       input.value = '';
     }
   });
@@ -69,6 +86,36 @@
   socket.on('chat message', function(msg) {
     let item = document.createElement('li');
     item.textContent = msg;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  socket.on('sound', function(msg) {
+    const sonido = cargarSonido("./sound1.mp3");
+    // sonido.pause();
+    sonido.play();
+  });
+  socket.on('emoji', function(msg) {
+    let item = document.createElement('li');
+    let span = document.createElement('span');
+    let img = document.createElement('img');
+    img.src=msg.emoji;
+    img.width=80;
+    span.innerText =msg.name + '|';
+    item.appendChild(span);
+    item.appendChild(img);
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  socket.on('rola', function(msg) {
+    let iframe = document.createElement('iframe');
+    let item = document.createElement('li');
+    let span = document.createElement('span');
+    iframe.src = msg.url;
+    iframe.width = "100%";
+    iframe.frameBorder = "0";
+    iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    item.appendChild(span);
+    item.appendChild(iframe);
     messages.appendChild(item);
     window.scrollTo(0, document.body.scrollHeight);
   });

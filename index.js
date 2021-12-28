@@ -1,4 +1,5 @@
 const app = require("express")();
+const express = require("express");
 const server = require("http").createServer(app);
 const port = process.env.PORT || 3130;
 
@@ -12,20 +13,29 @@ app.use(sessionMiddleware);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.static('public'));
 
 let DUMMY_USER = {
   id: 1,
-  username: "john",
+  username: "john"
 };
-const users = ['Larry Cañonga', 'Perrito caliente', 'Semental de fuego', 'Duro y Maduro', 'Macho Alfa', 'Guapeche', 'Bender', 'chavito']
+const users = ['Larry Cañonga', 'Perrito caliente', 'Semental de fuego', 'Duro y Maduro', 'Macho Alfa', 'Guapeche', 'chavito']
+const nicknames = {'Larry Cañonga': 'Larry👺', 'Perrito caliente': '  ∉Ｔ𝒶qⓤเ丅๏∌ 🤓 ', 'Semental de fuego': 'Semental', 'Duro y Maduro': "Papito😎", 'Macho Alfa': 'Machote👹', 'Guapeche': 'El Guapeche👅', 'Bender': 'Bender🤖', 'chavito': 'el bebe'}
 passport.use(
     new LocalStrategy((username, password, done) => {
+      if (username === 'Bender' && password === "xxxx") {
+        DUMMY_USER = {
+          id:Math.random(),
+          username: nicknames[username],
+        }
+        return done(null, DUMMY_USER);
+      }
       if (users.includes(username) && password === "doe") {
         console.log("authentication OK");
         DUMMY_USER = {
           id:Math.random(),
-          username: username
-        };
+          username: nicknames[username],
+        }
         return done(null, DUMMY_USER);
       } else {
         console.log("wrong credentials");
@@ -104,9 +114,16 @@ io.on('connect', (socket) => {
 
   socket.on('chat message', msg => {
     io.emit('chat message', socket.request.user.username + ' | ' + msg);
+    io.emit('sound', msg);
   });
-
-
+  socket.on('emoji', msg => {
+    const emoji = msg.split('emoji>');
+    io.emit('emoji', {emoji:emoji[1], name:socket.request.user.username});
+  })
+  socket.on('rola', msg => {
+    const rola = msg.split('rola>');
+    io.emit('rola', {url:rola[1], name:socket.request.user.username});
+  })
 });
 
 server.listen(port, () => {
