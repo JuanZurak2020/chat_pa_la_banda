@@ -1,4 +1,5 @@
 const app = require("express")();
+const checkPassword = require("./mongoConection");
 const express = require("express");
 const server = require("http").createServer(app);
 const port = process.env.PORT || 3130;
@@ -19,28 +20,24 @@ let DUMMY_USER = {
   id: 1,
   username: "john"
 };
-const users = ['Larry Cañonga', 'Perrito caliente', 'Semental de fuego', 'Duro y Maduro', 'Macho Alfa', 'Guapeche', 'chavito']
-const nicknames = {'Larry Cañonga': 'Larry👺', 'Perrito caliente': '  ∉Ｔ𝒶qⓤเ丅๏∌ 🤓 ', 'Semental de fuego': 'Semental', 'Duro y Maduro': "Papito😎", 'Macho Alfa': 'Machote👹', 'Guapeche': 'El Guapeche👅', 'Bender': 'Bender🤖', 'chavito': 'el bebe'}
+
 passport.use(
     new LocalStrategy((username, password, done) => {
-      if (username === 'Bender' && password === "xxxx") {
-        DUMMY_USER = {
-          id:Math.random(),
-          username: nicknames[username],
+      checkPassword(username, password).then(r => {
+        if (r.response != null) {
+          DUMMY_USER = {
+            id:r.response._id,
+            username: r.response.nickname,
+          }
+          return done(null, DUMMY_USER);
+        } else {
+          console.log("wrong credentials");
+          return done(null, false);
         }
-        return done(null, DUMMY_USER);
-      }
-      if (users.includes(username) && password === "doe") {
-        console.log("authentication OK");
-        DUMMY_USER = {
-          id:Math.random(),
-          username: nicknames[username],
-        }
-        return done(null, DUMMY_USER);
-      } else {
-        console.log("wrong credentials");
+      }).catch(r => {
+        console.log(r);
         return done(null, false);
-      }
+      });
     })
 );
 
@@ -102,11 +99,6 @@ io.use((socket, next) => {
 });
 
 io.on('connect', (socket) => {
-  console.log(`new connection ${socket.id}`);
-  socket.on('whoami', (cb) => {
-    cb(socket.request.user ? socket.request.user.username : '');
-  });
-
   const session = socket.request.session;
   console.log(`saving sid ${socket.id} in session ${session.id}`);
   session.socketId = socket.id;

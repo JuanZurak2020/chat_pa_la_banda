@@ -17,9 +17,6 @@
   </style>
 </head>
 <body>
-<p>Authenticated!</p>
-<p>Socket ID: <span id="socketId"></span></p>
-<p>Username: <span id="username"></span></p>
 
 <form action="/logout" method="post">
   <div style="position:fixed; top:0; right: 0;">
@@ -40,25 +37,19 @@
     minute:'2-digit'
   });
   const socket = io();
-  const socketIdSpan = document.getElementById("socketId");
-  const usernameSpan = document.getElementById("username");
 
   socket.on('connect', () => {
-    socketIdSpan.innerText = socket.id;
-
-    socket.emit('whoami', (username) => {
-      usernameSpan.innerText = username;
-    });
+    socket.emit('chat message',  time + ' | llegue prros');
   });
   const messages = document.getElementById('messages');
   const form = document.getElementById('form');
   const input = document.getElementById('input');
-  const cargarSonido = function (fuente) {
+  const loadSound = function (fuente) {
     const sonido = document.createElement("audio");
     sonido.src = fuente;
     sonido.setAttribute("preload", "auto");
     sonido.setAttribute("controls", "none");
-    sonido.style.display = "none"; // <-- oculto
+    sonido.style.display = "none"; // <-- hidden
     document.body.appendChild(sonido);
     return sonido;
   };
@@ -87,10 +78,10 @@
     let item = document.createElement('li');
     item.textContent = msg;
     messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
+    // window.scrollTo(0, document.body.scrollHeight);
   });
   socket.on('sound', function(msg) {
-    const sonido = cargarSonido("./sound1.mp3");
+    const sonido = loadSound("./sound1.mp3");
     // sonido.pause();
     sonido.play();
   });
@@ -104,7 +95,7 @@
     item.appendChild(span);
     item.appendChild(img);
     messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
+    // window.scrollTo(0, document.body.scrollHeight);
   });
   socket.on('rola', function(msg) {
     let iframe = document.createElement('iframe');
@@ -117,10 +108,10 @@
     item.appendChild(span);
     item.appendChild(iframe);
     messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
+    // window.scrollTo(0, document.body.scrollHeight);
   });
   (function() {
-    socket.emit('chat message',  time + ' | llegue prros');
+    //maybe do something
   })();
 </script>
 </body>
